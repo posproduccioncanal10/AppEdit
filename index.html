@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pedidos de Edición — Canal 10</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --rojo: #C0392B;
+    --rojo-claro: #FADBD8;
+    --rojo-hover: #E74C3C;
+    --gris-bg: #F4F5F7;
+    --gris-borde: #DDE1E7;
+    --gris-texto: #6B7280;
+    --negro: #111827;
+    --blanco: #FFFFFF;
+    --radio: 12px;
+    --sombra: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gris-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .logo-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--negro);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 40px;
+    margin-bottom: 10px;
+  }
+  .logo-num {
+    background: var(--rojo);
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+  .logo-canal { font-size: 14px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+  .header-sub { font-size: 13px; color: var(--gris-texto); margin-top: 4px; letter-spacing: 0.3px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--blanco);
+    border-radius: 20px;
+    box-shadow: var(--sombra);
+    padding: 2rem;
+    width: 100%;
+    max-width: 620px;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2rem;
+  }
+  .prog-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+  .prog-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--gris-borde);
+    background: var(--blanco);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--gris-texto);
+    transition: all 0.2s;
+    position: relative; z-index: 1;
+  }
+  .prog-circle.done { background: var(--rojo); border-color: var(--rojo); color: white; }
+  .prog-circle.active { border-color: var(--rojo); color: var(--rojo); font-weight: 700; }
+  .prog-label { font-size: 10px; color: var(--gris-texto); margin-top: 4px; text-align: center; }
+  .prog-line {
+    flex: 1; height: 2px; background: var(--gris-borde);
+    margin-top: -14px; transition: background 0.3s;
+  }
+  .prog-line.done { background: var(--rojo); }
+
+  /* ── STEPS ── */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .step-title { font-size: 20px; font-weight: 600; color: var(--negro); margin-bottom: 4px; }
+  .step-hint { font-size: 13px; color: var(--gris-texto); margin-bottom: 1.5rem; }
+
+  /* ── GRILLAS DE SELECCIÓN ── */
+  .grid-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .grid-tipo { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+
+  .sel-btn {
+    background: var(--gris-bg);
+    border: 1.5px solid var(--gris-borde);
+    border-radius: var(--radio);
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .sel-btn:hover { border-color: var(--rojo); background: var(--rojo-claro); }
+  .sel-btn.selected { border: 2px solid var(--rojo); background: var(--rojo-claro); }
+  .sel-icon { font-size: 22px; margin-bottom: 6px; }
+  .sel-name { font-size: 12px; font-weight: 500; color: var(--negro); line-height: 1.3; }
+
+  /* ── PRIORIDADES ── */
+  .grid-prio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
+  .prio-btn {
+    border-radius: var(--radio); padding: 14px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.15s; text-align: left;
+    user-select: none;
+  }
+  .prio-btn.p1 { background: #FADBD8; border-color: #F1948A; }
+  .prio-btn.p1.selected, .prio-btn.p1:hover { border-color: #C0392B; }
+  .prio-btn.p2 { background: #FDEBD0; border-color: #FAD7A0; }
+  .prio-btn.p2.selected, .prio-btn.p2:hover { border-color: #E67E22; }
+  .prio-btn.p3 { background: #EAFAF1; border-color: #A9DFBF; }
+  .prio-btn.p3.selected, .prio-btn.p3:hover { border-color: #27AE60; }
+  .prio-btn.p4 { background: #EBF5FB; border-color: #AED6F1; }
+  .prio-btn.p4.selected, .prio-btn.p4:hover { border-color: #2980B9; }
+  .prio-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; margin-bottom: 6px;
+  }
+  .p1 .prio-circle { background:#C0392B; color:white; }
+  .p2 .prio-circle { background:#E67E22; color:white; }
+  .p3 .prio-circle { background:#27AE60; color:white; }
+  .p4 .prio-circle { background:#2980B9; color:white; }
+  .prio-label { font-size: 13px; font-weight: 600; color: var(--negro); }
+  .prio-desc { font-size: 11px; color: var(--gris-texto); margin-top: 2px; }
+
+  /* ── DURACIÓN ── */
+  .grid-dur { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .dur-btn {
+    border: 1.5px solid var(--gris-borde); border-radius: 8px;
+    padding: 9px 4px; text-align: center; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--negro);
+    background: var(--gris-bg); transition: all 0.12s;
+    user-select: none;
+  }
+  .dur-btn:hover, .dur-btn.selected { border-color: var(--rojo); background: var(--rojo-claro); color: var(--rojo); }
+
+  /* ── CAMPOS ── */
+  .field-group { margin-bottom: 1.1rem; }
+  .field-label { font-size: 13px; font-weight: 500; color: var(--gris-texto); margin-bottom: 5px; display: block; }
+  textarea, input[type=text], input[type=datetime-local] {
+    width: 100%; border: 1.5px solid var(--gris-borde); border-radius: 10px;
+    padding: 10px 13px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    color: var(--negro); background: var(--gris-bg);
+    transition: border 0.15s, box-shadow 0.15s;
+  }
+  textarea { resize: vertical; min-height: 90px; }
+  textarea:focus, input:focus {
+    outline: none; border-color: var(--rojo);
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+    background: white;
+  }
+
+  /* ── NAVEGACIÓN ── */
+  .nav-row { display: flex; gap: 10px; margin-top: 1.75rem; }
+  .btn-next {
+    flex: 1; background: var(--rojo); color: white; border: none;
+    border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-next:hover { background: var(--rojo-hover); }
+  .btn-next:disabled { background: var(--gris-borde); cursor: not-allowed; color: var(--gris-texto); }
+  .btn-back {
+    background: var(--gris-bg); color: var(--gris-texto);
+    border: 1.5px solid var(--gris-borde); border-radius: 10px;
+    padding: 13px 20px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-back:hover { background: var(--gris-borde); }
+
+  /* ── ERROR ── */
+  .err { font-size: 12px; color: var(--rojo); margin-top: 5px; display: none; }
+
+  /* ── RESUMEN ── */
+  .resumen { background: var(--gris-bg); border-radius: var(--radio); padding: 1.25rem; margin-bottom: 1.25rem; }
+  .res-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 7px 0; border-bottom: 1px solid var(--gris-borde);
+  }
+  .res-row:last-child { border-bottom: none; }
+  .res-key { font-size: 12px; color: var(--gris-texto); flex-shrink: 0; margin-right: 12px; padding-top: 1px; }
+  .res-val { font-size: 13px; font-weight: 500; color: var(--negro); text-align: right; }
+
+  /* ── SUCCESS ── */
+  .success { text-align: center; padding: 1.5rem 0 0.5rem; }
+  .success-icon { font-size: 52px; margin-bottom: 1rem; }
+  .success-title { font-size: 22px; font-weight: 600; color: var(--negro); margin-bottom: 6px; }
+  .success-msg { font-size: 14px; color: var(--gris-texto); margin-bottom: 1.5rem; line-height: 1.6; }
+  .ticket-box {
+    background: var(--gris-bg); border-radius: var(--radio);
+    padding: 1.25rem; text-align: left; margin-bottom: 1rem;
+    border-left: 4px solid var(--rojo);
+  }
+  .ticket-num { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gris-texto); margin-bottom: 4px; }
+  .ticket-info { font-size: 15px; font-weight: 600; color: var(--negro); margin-bottom: 6px; }
+  .badge {
+    display: inline-block; padding: 3px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-p1 { background:#FADBD8; color:#922B21; }
+  .badge-p2 { background:#FDEBD0; color:#784212; }
+  .badge-p3 { background:#EAFAF1; color:#1E8449; }
+  .badge-p4 { background:#EBF5FB; color:#1A5276; }
+  .btn-sheets {
+    display: inline-block; background: #1A73E8; color: white;
+    border-radius: 10px; padding: 11px 20px; font-size: 14px;
+    font-weight: 600; text-decoration: none; margin-top: 0.5rem;
+    transition: background 0.15s;
+  }
+  .btn-sheets:hover { background: #1557B0; }
+  .btn-nuevo {
+    display: block; width: 100%; margin-top: 10px;
+    background: var(--gris-bg); border: 1.5px solid var(--rojo);
+    border-radius: 10px; color: var(--rojo); padding: 12px;
+    font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-nuevo:hover { background: var(--rojo-claro); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── CONFIG BANNER ── */
+  .config-banner {
+    background: #FFF3CD; border: 1px solid #FFD700;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 1.5rem;
+    font-size: 13px; color: #856404; display: none;
+  }
+  .config-banner.visible { display: block; }
+  .config-banner strong { display: block; margin-bottom: 2px; }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.5rem 1.25rem; }
+    .grid-prio { grid-template-columns: 1fr; }
+    .grid-dur { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-wrap">
+    <span class="logo-canal">Canal</span>
+    <span class="logo-num">10</span>
+    <span class="logo-canal">Tucumán</span>
+  </div>
+  <div class="header-sub">Sistema de Pedidos — Edición y Posproducción</div>
+</div>
+
+<div class="card">
+
+  <!-- Banner si no está configurada la URL -->
+  <div class="config-banner" id="config-banner">
+    <strong>⚙️ Falta configurar el Apps Script</strong>
+    Abrí el archivo HTML, buscá la variable <code>APPS_SCRIPT_URL</code> al inicio del script y pegá la URL de tu Web App.
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar">
+    <div class="prog-step">
+      <div class="prog-circle done" id="c0">1</div>
+      <div class="prog-label">Área</div>
+    </div>
+    <div class="prog-line" id="l01"></div>
+    <div class="prog-step">
+      <div class="prog-circle" id="c1">2</div>
+      <div class="prog-label">Pieza</div>
+    </div>
+    <div class="prog-line" id="l12"></div>
+    <div class="prog-step">
+      <div class="prog-circle" id="c2">3</div>
+      <div class="prog-label">Urgencia</div>
+    </div>
+    <div class="prog-line" id="l23"></div>
+    <div class="prog-step">
+      <div class="prog-circle" id="c3">4</div>
+      <div class="prog-label">Detalle</div>
+    </div>
+    <div class="prog-line" id="l34"></div>
+    <div class="prog-step">
+      <div class="prog-circle" id="c4">5</div>
+      <div class="prog-label">Confirmar</div>
+    </div>
+  </div>
+
+  <!-- PASO 1: Área -->
+  <div class="step active" id="step-0">
+    <div class="step-title">¿De qué área sos?</div>
+    <div class="step-hint">Tocá tu área para continuar</div>
+    <div class="grid-area">
+      <div class="sel-btn" data-val="Informativo" onclick="sel('area',this)"><div class="sel-icon">📺</div><div class="sel-name">Informativo</div></div>
+      <div class="sel-btn" data-val="Redes" onclick="sel('area',this)"><div class="sel-icon">📱</div><div class="sel-name">Redes</div></div>
+      <div class="sel-btn" data-val="Administración" onclick="sel('area',this)"><div class="sel-icon">🗂️</div><div class="sel-name">Administración</div></div>
+      <div class="sel-btn" data-val="Ventas" onclick="sel('area',this)"><div class="sel-icon">💰</div><div class="sel-name">Ventas</div></div>
+      <div class="sel-btn" data-val="Comercial" onclick="sel('area',this)"><div class="sel-icon">🤝</div><div class="sel-name">Comercial</div></div>
+      <div class="sel-btn" data-val="Programación" onclick="sel('area',this)"><div class="sel-icon">🗓️</div><div class="sel-name">Programación</div></div>
+      <div class="sel-btn" data-val="Operaciones" onclick="sel('area',this)"><div class="sel-icon">⚙️</div><div class="sel-name">Operaciones</div></div>
+    </div>
+    <div class="err" id="err-area">Seleccioná tu área para continuar.</div>
+    <div class="nav-row"><button class="btn-next" onclick="goNext(0)">Continuar →</button></div>
+  </div>
+
+  <!-- PASO 2: Tipo de pieza -->
+  <div class="step" id="step-1">
+    <div class="step-title">¿Qué necesitás?</div>
+    <div class="step-hint">Elegí el tipo de pieza que querés</div>
+    <div class="grid-tipo">
+      <div class="sel-btn" data-val="Clip / recorte" onclick="sel('tipo',this)"><div class="sel-icon">✂️</div><div class="sel-name">Clip / recorte</div></div>
+      <div class="sel-btn" data-val="Nota editada" onclick="sel('tipo',this)"><div class="sel-icon">🎬</div><div class="sel-name">Nota editada</div></div>
+      <div class="sel-btn" data-val="Promo / spot" onclick="sel('tipo',this)"><div class="sel-icon">📣</div><div class="sel-name">Promo / spot</div></div>
+      <div class="sel-btn" data-val="Zócalo / gráfica" onclick="sel('tipo',this)"><div class="sel-icon">🖼️</div><div class="sel-name">Zócalo / gráfica</div></div>
+      <div class="sel-btn" data-val="Conversión de archivos" onclick="sel('tipo',this)"><div class="sel-icon">🔄</div><div class="sel-name">Conversión archivos</div></div>
+      <div class="sel-btn" data-val="Contenido para redes" onclick="sel('tipo',this)"><div class="sel-icon">📲</div><div class="sel-name">Contenido redes</div></div>
+      <div class="sel-btn" data-val="Carpeta comercial" onclick="sel('tipo',this)"><div class="sel-icon">📁</div><div class="sel-name">Carpeta comercial</div></div>
+      <div class="sel-btn" data-val="PNT / publicidad" onclick="sel('tipo',this)"><div class="sel-icon">📺</div><div class="sel-name">PNT / publicidad</div></div>
+      <div class="sel-btn" data-val="Otro" onclick="sel('tipo',this)"><div class="sel-icon">💬</div><div class="sel-name">Otro</div></div>
+    </div>
+    <div class="err" id="err-tipo">Seleccioná el tipo de pieza.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(1)">← Volver</button>
+      <button class="btn-next" onclick="goNext(1)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 3: Urgencia -->
+  <div class="step" id="step-2">
+    <div class="step-title">¿Cuándo lo necesitás?</div>
+    <div class="step-hint">Elegí la urgencia del pedido</div>
+    <div class="grid-prio">
+      <div class="prio-btn p1" data-val="🔴 P1 — Sale al aire" onclick="sel('prio',this)">
+        <div class="prio-circle">1</div>
+        <div class="prio-label">Sale al aire</div>
+        <div class="prio-desc">Tiene hora de emisión hoy</div>
+      </div>
+      <div class="prio-btn p2" data-val="🟠 P2 — Mismo día" onclick="sel('prio',this)">
+        <div class="prio-circle">2</div>
+        <div class="prio-label">Mismo día</div>
+        <div class="prio-desc">Redes, clips del día</div>
+      </div>
+      <div class="prio-btn p3" data-val="🟡 P3 — Con fecha" onclick="sel('prio',this)">
+        <div class="prio-circle">3</div>
+        <div class="prio-label">Tiene fecha</div>
+        <div class="prio-desc">Deadline planificable</div>
+      </div>
+      <div class="prio-btn p4" data-val="🟢 P4 — Sin urgencia" onclick="sel('prio',this)">
+        <div class="prio-circle">4</div>
+        <div class="prio-label">Sin urgencia</div>
+        <div class="prio-desc">Cuando haya tiempo</div>
+      </div>
+    </div>
+    <div class="err" id="err-prio">Indicá la urgencia del pedido.</div>
+    <div class="field-group" style="margin-top:1.25rem;">
+      <label class="field-label">Duración estimada del material</label>
+      <div class="grid-dur">
+        <div class="dur-btn" data-val="menos de 1 min" onclick="sel('dur',this)">−1 min</div>
+        <div class="dur-btn" data-val="1 a 3 min" onclick="sel('dur',this)">1–3 min</div>
+        <div class="dur-btn" data-val="3 a 10 min" onclick="sel('dur',this)">3–10 min</div>
+        <div class="dur-btn" data-val="más de 10 min" onclick="sel('dur',this)">+10 min</div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Deadline — fecha y hora (opcional)</label>
+      <input type="datetime-local" id="deadline" />
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(2)">← Volver</button>
+      <button class="btn-next" onclick="goNext(2)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 4: Descripción -->
+  <div class="step" id="step-3">
+    <div class="step-title">Contanos qué necesitás</div>
+    <div class="step-hint">Cuanto más detalle, mejor resultado tendrás</div>
+    <div class="field-group">
+      <label class="field-label">Descripción del pedido *</label>
+      <textarea id="descripcion" placeholder="Ej: Clip de la entrevista de las 10:15 de EntreNos de hoy. Cortar desde que entra el invitado hasta el cierre. Con zócalo del nombre." rows="4"></textarea>
+      <div class="err" id="err-desc">Escribí una descripción del pedido.</div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">¿Dónde está el material? (opcional)</label>
+      <input type="text" id="ubicacion" placeholder="Ej: Servidor A / carpeta EntreNos / USB / link de descarga..." />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Tu nombre y apellido *</label>
+      <input type="text" id="nombre" placeholder="Ej: María González" />
+      <div class="err" id="err-nombre">Escribí tu nombre.</div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(3)">← Volver</button>
+      <button class="btn-next" onclick="goNext(3)">Ver resumen →</button>
+    </div>
+  </div>
+
+  <!-- PASO 5: Resumen -->
+  <div class="step" id="step-4">
+    <div class="step-title">Revisá tu pedido</div>
+    <div class="step-hint">Confirmá que todo esté correcto antes de enviar</div>
+    <div class="resumen" id="resumen"></div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(4)">← Corregir</button>
+      <button class="btn-next" id="btn-enviar" onclick="enviar()">Enviar pedido ✓</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" id="step-5">
+    <div class="success">
+      <div class="success-icon">✅</div>
+      <div class="success-title">¡Pedido registrado!</div>
+      <div class="success-msg">Tu pedido quedó guardado en el Google Sheets.<br>El equipo de edición lo verá al inicio del próximo turno.</div>
+      <div class="ticket-box" id="ticket"></div>
+      <a class="btn-sheets" href="https://docs.google.com/spreadsheets/d/1DToPu5zYyFdVDZFdvYNnNw1AniVSZzhpY_zs6j-9Lzs/edit" target="_blank">
+        📊 Ver el Sheets de pedidos
+      </a>
+      <br/>
+      <button class="btn-nuevo" onclick="reset()">+ Hacer otro pedido</button>
+    </div>
+  </div>
+
+</div><!-- /card -->
+
+<script>
+// ============================================================
+//  ⚙️  ÚNICA LÍNEA QUE TENÉS QUE EDITAR:
+//  Pegá la URL de tu Web App de Apps Script acá abajo
+// ============================================================
+var APPS_SCRIPT_URL = "PEGAR_URL_DEL_WEB_APP_ACÁ";
+// ============================================================
+
+var state = { area:'', tipo:'', prio:'', dur:'', deadline:'', desc:'', ubic:'', nombre:'' };
+
+// Mostrar aviso si no está configurada la URL
+window.addEventListener('load', function() {
+  if (APPS_SCRIPT_URL === "PEGAR_URL_DEL_WEB_APP_ACÁ") {
+    document.getElementById('config-banner').classList.add('visible');
+  }
+});
+
+function sel(field, el) {
+  el.closest('[class$="-grid"], .grid-area, .grid-tipo, .grid-prio, .grid-dur')
+    || el.parentElement;
+  var grupo = el.parentElement;
+  grupo.querySelectorAll('[data-val]').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state[field] = el.dataset.val;
+}
+
+function showErr(id, show) {
+  document.getElementById(id).style.display = show ? 'block' : 'none';
+}
+
+function goNext(from) {
+  if (from === 0 && !state.area)  { showErr('err-area', true); return; }
+  if (from === 0) showErr('err-area', false);
+  if (from === 1 && !state.tipo)  { showErr('err-tipo', true); return; }
+  if (from === 1) showErr('err-tipo', false);
+  if (from === 2 && !state.prio)  { showErr('err-prio', true); return; }
+  if (from === 2) {
+    showErr('err-prio', false);
+    state.dur = state.dur || 'No especificada';
+    state.deadline = document.getElementById('deadline').value;
+  }
+  if (from === 3) {
+    state.desc   = document.getElementById('descripcion').value.trim();
+    state.nombre = document.getElementById('nombre').value.trim();
+    state.ubic   = document.getElementById('ubicacion').value.trim();
+    var ok = true;
+    if (!state.desc)   { showErr('err-desc', true);   ok = false; } else showErr('err-desc', false);
+    if (!state.nombre) { showErr('err-nombre', true);  ok = false; } else showErr('err-nombre', false);
+    if (!ok) return;
+    buildResumen();
+  }
+  setStep(from + 1);
+}
+
+function goBack(from) { setStep(from - 1); }
+
+function setStep(n) {
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i === n));
+  // Progress circles
+  for (var i = 0; i <= 4; i++) {
+    var c = document.getElementById('c' + i);
+    c.classList.remove('done', 'active');
+    if (i < n)      c.classList.add('done');
+    else if (i === n) c.classList.add('active');
+  }
+  // Progress lines
+  var lines = ['l01','l12','l23','l34'];
+  lines.forEach(function(id, i) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('done', i < n);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function fmtDl(v) {
+  if (!v) return 'No especificado';
+  var d = new Date(v);
+  return d.toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function buildResumen() {
+  document.getElementById('resumen').innerHTML =
+    row('Área', state.area) +
+    row('Tipo de pieza', state.tipo) +
+    row('Prioridad', state.prio) +
+    row('Duración', state.dur) +
+    row('Deadline', fmtDl(state.deadline)) +
+    row('Material en', state.ubic || 'No indicado') +
+    row('Descripción', state.desc) +
+    row('Solicitante', state.nombre);
+}
+
+function row(k, v) {
+  return '<div class="res-row"><span class="res-key">' + k + '</span><span class="res-val">' + v + '</span></div>';
+}
+
+function getBadge(p) {
+  if (p.includes('P1')) return '<span class="badge badge-p1">Prioridad 1 — Urgente</span>';
+  if (p.includes('P2')) return '<span class="badge badge-p2">Prioridad 2 — Mismo día</span>';
+  if (p.includes('P3')) return '<span class="badge badge-p3">Prioridad 3 — Con fecha</span>';
+  return '<span class="badge badge-p4">Prioridad 4 — Sin urgencia</span>';
+}
+
+async function enviar() {
+  var btn = document.getElementById('btn-enviar');
+
+  if (APPS_SCRIPT_URL === "PEGAR_URL_DEL_WEB_APP_ACÁ") {
+    alert('⚙️ Falta configurar la URL del Apps Script.\nSeguí las instrucciones del archivo de instalación.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+  var payload = {
+    area:     state.area,
+    tipo:     state.tipo,
+    prio:     state.prio,
+    dur:      state.dur,
+    deadline: fmtDl(state.deadline),
+    ubic:     state.ubic,
+    desc:     state.desc,
+    nombre:   state.nombre
+  };
+
+  try {
+    var res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    var data = await res.json();
+    if (!data.ok) throw new Error('Script error');
+
+    // Mostrar ticket con el número devuelto por el script
+    var ticket = data.ticket || '—';
+    var ahora = new Date().toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('ticket').innerHTML =
+      '<div class="ticket-num">N° de pedido: ' + ticket + ' · ' + ahora + '</div>' +
+      '<div class="ticket-info">' + state.area + ' → ' + state.tipo + '</div>' +
+      '<div style="margin-top:6px;">' + getBadge(state.prio) + '</div>' +
+      '<div style="font-size:12px;color:#6B7280;margin-top:8px;">Pedido por: ' + state.nombre + '</div>';
+
+    setStep(5);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'Enviar pedido ✓';
+    alert('❌ No se pudo guardar el pedido.\nReintentá o avisá a Posproducción directamente.');
+  }
+}
+
+function reset() {
+  state = { area:'', tipo:'', prio:'', dur:'', deadline:'', desc:'', ubic:'', nombre:'' };
+  document.querySelectorAll('[data-val]').forEach(b => b.classList.remove('selected'));
+  document.getElementById('deadline').value = '';
+  document.getElementById('descripcion').value = '';
+  document.getElementById('ubicacion').value = '';
+  document.getElementById('nombre').value = '';
+  var btn = document.getElementById('btn-enviar');
+  btn.disabled = false;
+  btn.innerHTML = 'Enviar pedido ✓';
+  setStep(0);
+}
+</script>
+
+</body>
+</html>
